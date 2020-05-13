@@ -123,13 +123,19 @@ function moveTetroRight() {
   }
 }
 
-// проверяем заполнение линии
+// проверяем заполненые линии
 function removeFullLines() {
   for (let y = 0; y < playfield.length; y++) {
+    let canRemove = true;
 
-    let filledSum = playfield[y].reduce((sum, value) => sum + value, 0);
+    for (let x = 0; x < playfield[y].length; x++) {
+      if (playfield[y][x] !== 2) {
+        canRemove = false;
+        break;
+      }
+    }
 
-    if (filledSum === 20) {
+    if (canRemove) {
       playfield.splice(y, 1);
       playfield.unshift(playfield[0]);
     }
