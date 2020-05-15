@@ -2,6 +2,8 @@ const main = document.querySelector('.main');
 const scoreElem = document.getElementById('score');
 const levelElem = document.getElementById('level');
 const nextTetroElem = document.getElementById('nextTetro');
+const startBtn = document.getElementById('start');
+const pauseBtn = document.getElementById('pause');
 
 let playfield = [
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -32,10 +34,10 @@ const figures = {
     [1, 1]
   ],
   I: [
-    [0, 1, 0, 0],
-    [0, 1, 0, 0],
-    [0, 1, 0, 0],
-    [0, 1, 0, 0],
+    [0, 0, 0, 0],
+    [1, 1, 1, 1],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
   ],
   S: [
     [0, 1, 1],
@@ -70,6 +72,7 @@ let nextTetro = getNewTetro();
 
 let score = 0;
 let currenLevel = 1;
+let isPaused = false;
 
 let possibleLevels = {
   1: {
@@ -250,12 +253,16 @@ function fixTetro() {
 
 // двигает фигурку вниз
 function moveTetroDown() {
+  if (isPaused) return;
   activeTetro.y++;
   if (hasCollisions()) {
     activeTetro.y--;
     fixTetro();
     removeFullLines();
     activeTetro = nextTetro;
+    if (hasCollisions()) {
+      alert('Game Over :(')
+    }
     nextTetro = getNewTetro();
   }
 }
@@ -271,6 +278,8 @@ function dropTetro() {
 }
 
 document.addEventListener('keydown', e => {
+  if (isPaused) return;
+
   if (e.keyCode === 37) {
     // Двигаем фигурку влево при нажатии влево
     activeTetro.x--;
@@ -299,6 +308,18 @@ document.addEventListener('keydown', e => {
   drwaNextTetro();
 });
 
+pauseBtn.addEventListener('click', (e) => {
+  const target = e.target;
+
+  if (target.textContent === 'Pause') {
+    target.textContent = 'Keep Playing...';
+  } else {
+    target.textContent = 'Pause';
+  }
+
+  isPaused = !isPaused;
+});
+
 scoreElem.textContent = score;
 levelElem.textContent = currenLevel;
 
@@ -307,10 +328,13 @@ draw();
 drwaNextTetro();
 
 function startGame() {
-  moveTetroDown();
-  addActiveTetro();
-  draw();
-  drwaNextTetro();
+  if (!isPaused) {
+    moveTetroDown();
+    addActiveTetro();
+    draw();
+    drwaNextTetro();
+  }
+
   setTimeout(startGame, possibleLevels[currenLevel].speed)
 }
 
