@@ -1,4 +1,6 @@
 const main = document.querySelector('.main');
+const scoreElem = document.getElementById('score');
+const levelElem = document.getElementById('level');
 
 let playfield = [
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -64,15 +66,48 @@ const figures = {
   ]
 }
 
-const gameSpeed = 500;
 
 let activeTetro = {
   x: 3,
   y: 0,
-  shape: getNewTetro()
+  shape: [
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+    [0, 1, 0, 0],
+  ]
 };
 
 let score = 0;
+let currenLevel = 1;
+
+let possibleLevels = {
+  1: {
+    scorePerLine: 10,
+    speed: 400,
+    nextLevelScore: 100
+  },
+  2: {
+    scorePerLine: 15,
+    speed: 300,
+    nextLevelScore: 200
+  },
+  3: {
+    scorePerLine: 20,
+    speed: 200,
+    nextLevelScore: 400
+  },
+  4: {
+    scorePerLine: 30,
+    speed: 100,
+    nextLevelScore: 800
+  },
+  5: {
+    scorePerLine: 50,
+    speed: 50,
+    nextLevelScore: Infinity
+  },
+}
 
 function draw() {
   let mainInnerHTML = '';
@@ -139,6 +174,9 @@ function hasCollisions() {
 
 // проверяем заполненые линии
 function removeFullLines() {
+  let addScore = possibleLevels[currenLevel].scorePerLine
+  let filledLines = 0;
+
   for (let y = 0; y < playfield.length; y++) {
     let canRemove = true;
 
@@ -151,9 +189,32 @@ function removeFullLines() {
 
     if (canRemove) {
       playfield.splice(y, 1);
-      playfield.unshift(playfield[0]);
+      playfield.unshift([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+      filledLines++;
     }
   }
+
+  switch (filledLines) {
+    case 1:
+      score += addScore;
+      break;
+    case 2:
+      score += addScore * 3;
+      break;
+    case 3:
+      score += addScore * 6;
+      break;
+    case 4:
+      score += addScore * 12;
+      break;
+  }
+
+  scoreElem.textContent = score;
+  if (score >= possibleLevels[currenLevel].nextLevelScore) {
+    currenLevel++;
+    levelElem.textContent = currenLevel;
+  }
+
 }
 
 function getNewTetro() {
@@ -210,15 +271,16 @@ document.addEventListener('keydown', e => {
   draw();
 });
 
+scoreElem.textContent = score;
+levelElem.textContent = currenLevel;
 addActiveTetro();
 draw();
-
 
 function startGame() {
   moveTetroDown();
   addActiveTetro();
   draw();
-  setTimeout(startGame, gameSpeed)
+  setTimeout(startGame, possibleLevels[currenLevel].speed)
 }
 
-setTimeout(startGame, gameSpeed);
+setTimeout(startGame, possibleLevels[currenLevel].speed);
