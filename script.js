@@ -1,9 +1,6 @@
 const main = document.querySelector('.main');
 
 let playfield = [
-  [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -19,11 +16,24 @@ let playfield = [
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 2, 2, 0, 0, 0, 0],
-  [2, 2, 2, 2, 2, 2, 2, 2, 0, 0]
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
 let gameSpeed = 500;
+
+let activeTetro = {
+  x: 0,
+  y: 0,
+  shape: [
+    [1, 1, 1],
+    [0, 1, 0],
+    [0, 0, 0]
+  ]
+}
 
 function draw() {
   let mainInnerHTML = '';
@@ -44,83 +54,38 @@ function draw() {
   main.innerHTML = mainInnerHTML;
 }
 
-function canTetroMoveDown() {
+function removePrevActiveTetro() {
   for (let y = 0; y < playfield.length; y++) {
     for (let x = 0; x < playfield[y].length; x++) {
-      if (playfield[y][x] === 1) {
-        if (y == playfield.length - 1 || playfield[y + 1][x] == 2) return false;
-      }
+      if (playfield[y][x]) playfield[y][x] = 0;
     }
-  }
-
-  return true;
-}
-
-function moveTetroDown() {
-  if (canTetroMoveDown()) {
-    for (let y = playfield.length - 1; y >= 0; y--) {
-      for (let x = 0; x < playfield[y].length; x++) {
-        if (playfield[y][x] === 1) {
-          playfield[y + 1][x] = 1;
-          playfield[y][x] = 0;
-        }
-      }
-    }
-  } else {
-    fixTetro();
   }
 }
 
-// Двигаем фигурку влево
-function canTetroMoveLeft() {
-  for (let y = 0; y < playfield.length; y++) {
-    for (let x = 0; x < playfield[y].length; x++) {
-      if (playfield[y][x] === 1) {
-        if (x === 0 || playfield[y][x - 1] === 2) return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-function moveTetroLeft() {
-  if (canTetroMoveLeft()) {
-    for (let y = playfield.length - 1; y >= 0; y--) {
-      for (let x = 0; x < playfield[y].length; x++) {
-        if (playfield[y][x] === 1) {
-          playfield[y][x - 1] = 1;
-          playfield[y][x] = 0;
-        }
+function addActiveTetro() {
+  removePrevActiveTetro();
+  for (let y = 0; y < activeTetro.shape.length; y++) {
+    for (let x = 0; x < activeTetro.shape[y].length; x++) {
+      if (activeTetro.shape[y][x]) {
+        playfield[activeTetro.y + y][activeTetro.x + x] = activeTetro.shape[y][x];
       }
     }
   }
 }
 
-// Двигаем фигурку вправо
-function canTetroMoveRigth() {
-  for (let y = 0; y < playfield.length; y++) {
-    for (let x = 0; x < playfield[y].length; x++) {
-      if (playfield[y][x] === 1) {
-        if (x === playfield[0].length - 1 || playfield[y][x + 1] === 2) return false;
+function hasCollisions() {
+  for (let y = 0; y < activeTetro.shape.length; y++) {
+    for (let x = 0; x < activeTetro.shape[y].length; x++) {
+      if (
+        activeTetro.shape[y][x] &&
+        (playfield[activeTetro.y + y] === undefined ||
+          playfield[activeTetro.y + y][activeTetro.x + x] === undefined)
+      ) {
+        return true;
       }
     }
   }
-
-  return true;
-}
-
-function moveTetroRight() {
-  if (canTetroMoveRigth()) {
-    for (let y = playfield.length - 1; y >= 0; y--) {
-      for (let x = playfield[y].length - 1; x >= 0; x--) {
-        if (playfield[y][x] === 1) {
-          playfield[y][x + 1] = 1;
-          playfield[y][x] = 0;
-        }
-      }
-    }
-  }
+  return false;
 }
 
 // проверяем заполненые линии
@@ -156,25 +121,37 @@ function fixTetro() {
 
   playfield[0] = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0];
   playfield[1] = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0];
+
 }
 
 document.addEventListener('keydown', e => {
   if (e.keyCode === 37) {
     // Двигаем фигурку влево
-    moveTetroLeft();
+    activeTetro.x--;
+    if (hasCollisions()) {
+      activeTetro.x++;
+    }
   } else if (e.keyCode === 39) {
     // Двигаем фигурку вправо
-    moveTetroRight();
+    activeTetro.x++;
+    if (hasCollisions()) {
+      activeTetro.x--;
+    }
   } else if (e.keyCode === 40) {
     // Ускоряем фигурку
-    moveTetroDown();
+    activeTetro.y++;
+    if (hasCollisions()) {
+      activeTetro.y--;
+    }
   }
-
+  addActiveTetro();
   draw();
 });
 
+addActiveTetro();
 draw();
 
+/*
 function startGame() {
   moveTetroDown();
   draw();
@@ -183,4 +160,4 @@ function startGame() {
 
 setTimeout(startGame, gameSpeed);
 
-
+*/
